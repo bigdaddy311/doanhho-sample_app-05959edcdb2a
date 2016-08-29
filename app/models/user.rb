@@ -1,6 +1,7 @@
 class User < ActiveRecord::Base
+  has_many :microposts, dependent: :destroy
   attr_accessor :remember_token, :activation_token, :reset_token
-  before_save   :downcase_email 
+  before_save   :downcase_email
   before_create :create_activation_digest
   validates :name, presence: true, length: { maximum: 50 }
   VALID_EMAIL_REGEX = /\A[\w+\-.]+@[a-z\d\-]+(\.[a-z\d\-]+)*\.[a-z]+\z/i
@@ -51,7 +52,7 @@ class User < ActiveRecord::Base
 
   def send_activation_email
     UserMailer.account_activation(self).deliver_now
-  end 
+  end
 
   def send_reset_password_email
     UserMailer.password_reset(self).deliver_now
@@ -61,7 +62,11 @@ class User < ActiveRecord::Base
     self.reset_sent_at < 2.hours.ago
   end
 
-  private 
+  def feed
+    Micropost.where("user_id = ?", id)
+  end
+
+  private
     def downcase_email
       self.email = email.downcase
     end
